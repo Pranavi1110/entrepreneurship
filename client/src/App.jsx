@@ -1,36 +1,30 @@
-// client/src/App.js
 import React from 'react';
-import EntrepreneurForm from './components/EntrepreneurForm';
 import {
   createBrowserRouter,
-  Navigate,
   RouterProvider,
 } from "react-router-dom";
-import Home from "./components/Home"
-import RootLayout from "./components/RootLayout"
-import './styles/App.css'
+import Home from "./components/Home";
+import EntrepreneurForm from "./components/EntrepreneurForm";
+import Report from "./components/Report";  // Import the new report page
+import RootLayout from "./components/RootLayout";
+import './styles/App.css';
 
-const browserRouterObj=createBrowserRouter([
+const browserRouterObj = createBrowserRouter([
   {
-    path:"/",
-    element:<RootLayout/>,
-    children:[
-      {
-        path:"",
-        element:<Home/>
-      },{
-        path:"form",
-        element:<EntrepreneurForm/>
-      }
-    ]
-  }
-])
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      { path: "", element: <Home /> },
+      { path: "form", element: <EntrepreneurForm /> },
+      { path: "reports", element: <Report /> }, // New report route
+    ],
+  },
+]);
 
 function App() {
   return (
-
     <div className="App">
-      <RouterProvider router={browserRouterObj}/>
+      <RouterProvider router={browserRouterObj} />
     </div>
   );
 }

@@ -1,22 +1,19 @@
-// server/server.js
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const connectDB = require('./config/database');
-const entrepreneurRoutes = require('./routes/entrepreneurRoutes');
+const reportRoutes = require('./routes/reports'); // ✅ Correct route import
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(cors());
 app.use(express.json());
+app.use(cors());
 
-// Connect to Database
-connectDB();
+mongoose.connect('mongodb://localhost:27017/entrepreneurDB', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log("MongoDB connected"))
+.catch(err => console.log("Database connection error:", err));
 
-// Routes
-app.use('/api', entrepreneurRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.use('/api', reportRoutes);
+
+app.listen(5000, () => console.log('Server running on port 5000'));
