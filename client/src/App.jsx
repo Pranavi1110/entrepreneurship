@@ -8,6 +8,7 @@ import EntrepreneurForm from "./components/EntrepreneurForm";
 import Report from "./components/Report";  // Import the new report page
 import RootLayout from "./components/RootLayout";
 import './styles/App.css';
+import StudentTable from './components/StudentTable';
 
 const browserRouterObj = createBrowserRouter([
   {
@@ -16,7 +17,8 @@ const browserRouterObj = createBrowserRouter([
     children: [
       { path: "", element: <Home /> },
       { path: "form", element: <EntrepreneurForm /> },
-      { path: "reports", element: <Report /> }, // New report route
+      { path: "reports", element: <Report /> }, 
+      {path:"students",element:<StudentTable/>}// New report route
     ],
   },
 ]);
