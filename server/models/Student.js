@@ -7,7 +7,8 @@ const StudentSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true
+    required: true,
+    
   },
   htNo: {
     type: String,

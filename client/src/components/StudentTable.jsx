@@ -1,4 +1,3 @@
-// StudentTable.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -8,7 +7,7 @@ const StudentTable = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/students'); // adjust the URL if needed
+        const res = await axios.get('http://localhost:5000/api/students');
         setStudents(res.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -17,6 +16,45 @@ const StudentTable = () => {
 
     fetchStudents();
   }, []);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const updatedStudents = await Promise.all(
+        students.map(async (student) => {
+          const role = await fetchRoleFromBing(student.name);
+          return { ...student, role };
+        })
+      );
+      setStudents(updatedStudents);
+    };
+
+    if (students.length > 0 && !students[0].role) {
+      fetchRoles();
+    }
+  }, [students]);
+
+  function generateLinkedInUrl(name) {
+    const nameParts = name.trim().split(/\s+/);
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    return `https://www.linkedin.com/search/results/people/?keywords=${firstName}${lastName ? '+' + lastName : ''}+VNR`;
+  }
+
+  const fetchRoleFromBing = async (name) => {
+    try {
+      const query = `site:linkedin.com/in "${name}" VNR`;
+      const response = await axios.get(
+        `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.bing.com/search?q=' + encodeURIComponent(query))}`
+      );
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(response.data, "text/html");
+      const snippetElement = doc.querySelector(".b_caption p");
+      return snippetElement ? snippetElement.textContent : "N/A";
+    } catch (error) {
+      console.error('Error fetching role from Bing:', error);
+      return "N/A";
+    }
+  };
 
   return (
     <div className="container mt-5">
@@ -30,7 +68,6 @@ const StudentTable = () => {
               <th>Hall Ticket No</th>
               <th>LinkedIn</th>
               <th>Role</th>
-              {/* <th>Created At</th> */}
             </tr>
           </thead>
           <tbody>
@@ -40,16 +77,11 @@ const StudentTable = () => {
                 <td>{student.name}</td>
                 <td>{student.htNo}</td>
                 <td>
-                  {student.linkedinUrl ? (
-                    <a href={student.linkedinUrl} target="_blank" rel="noreferrer">
-                      View
-                    </a>
-                  ) : (
-                    'N/A'
-                  )}
+                  <a href={generateLinkedInUrl(student.name)} target="_blank" rel="noreferrer">
+                    View
+                  </a>
                 </td>
-                <td>{student.role || 'N/A'}</td>
-                {/* <td>{new Date(student.createdAt).toLocaleDateString()}</td> */}
+                <td>{student.role || 'Not Found'}</td>
               </tr>
             ))}
           </tbody>

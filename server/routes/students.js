@@ -2,15 +2,17 @@
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
+// const scrapeRole = require('../scraper');
+
 
 // Get all students
 router.get('/', async (req, res) => {
   try {
-    const students = await Student.find().sort({ slNo: 1 });
+    const students = await Student.find();
     res.json(students);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Error fetching students:', err);
+    res.status(500).json({ message: 'Error fetching students' });
   }
 });
 
@@ -112,5 +114,6 @@ router.post('/bulk', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
 
 module.exports = router;

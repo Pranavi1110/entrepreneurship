@@ -36,7 +36,7 @@ const studentData = [
   { slNo: 21, name: 'GUMMADI MAHESH GANDHI', htNo: '2007IA0521', linkedinUrl: 'https://www.linkedin.com/in/mahesh-gandhi-gummadi-b13285228/', role: null },
   { slNo: 22, name: 'GURRAM ANUSHA', htNo: '2007IA0522', linkedinUrl: 'https://www.linkedin.com/in/anusha-gurram-970b2a223/', role: 'MS' },
   { slNo: 23, name: 'GYARA ANVESH', htNo: '2007IA0523', linkedinUrl: 'https://www.linkedin.com/in/anvesh-gyara-5115b8265/', role: 'NA' },
-  { slNo: 24, name: 'HARSHITH CHDERLA', htNo: '2007IA0524', linkedinUrl: 'https://www.linkedin.com/in/harshith-chejerla/', role: 'Data Science Grad Student @ University of Maryland, College Park' },
+  { slNo: 24, name: 'HARSHITH CHEJERLA', htNo: '2007IA0524', linkedinUrl: 'https://www.linkedin.com/in/harshith-chejerla/', role: 'Data Science Grad Student @ University of Maryland, College Park' },
   { slNo: 25, name: 'JIGEESH CHOWDHARY NALLAPATI', htNo: '2007IA0525', linkedinUrl: 'https://www.linkedin.com/in/jigeesh-chowdhary-nallapati-0aa05113a/', role: 'NA' },
   { slNo: 26, name: 'JISHNU PULIPAKA', htNo: '2007IA0526', linkedinUrl: 'https://www.linkedin.com/in/jishnu-pulipaka-974b26244/', role: 'Software Engineer at JP Morgan Chase and Co' },
   { slNo: 27, name: 'JUPUDI CHAITHRA', htNo: '2007IA0527', linkedinUrl: 'https://www.linkedin.com/in/chaithra-jupudi-371179223/', role: 'SVE @ Google' },
@@ -889,3 +889,4 @@ const seedDatabase = async () => {
 };
 
 seedDatabase();
+
