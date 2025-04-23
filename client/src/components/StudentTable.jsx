@@ -35,10 +35,15 @@ const StudentTable = () => {
 
   function generateLinkedInUrl(name) {
     const nameParts = name.trim().split(/\s+/);
-    const firstName = nameParts[0];
-    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-    return `https://www.linkedin.com/search/results/people/?keywords=${firstName}${lastName ? '+' + lastName : ''}+VNR`;
+    const includesVNR = nameParts.some(part => part.toLowerCase() === 'vnr');
+    const filteredParts = nameParts.filter(part => part.toLowerCase() !== 'vnr');
+    const firstName = filteredParts[0];
+    const lastName = filteredParts.length > 1 ? filteredParts[filteredParts.length - 1] : '';
+    const keyword = `${firstName}${lastName ? '+' + lastName : ''}${includesVNR ? '+VNR' : ''}`;
+    return `https://www.linkedin.com/search/results/people/?keywords=${keyword}`;
   }
+  
+  
 
   const fetchRoleFromBing = async (name) => {
     try {
