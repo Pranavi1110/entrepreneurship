@@ -1,18 +1,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-// const { ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node'); // Corrected import
+const clerk = require('@clerk/express'); // Corrected import'
 require('dotenv').config();
-
+const app = express();
 const reportRoutes = require('./routes/reports');
 const studentRoutes = require('./routes/students');
-
-const app = express();
-
+// app.use(clerk.expressWithAuth());
 // Middlewares
+app.use(cors())
+// app.use(cors({
+//   origin: 'http://localhost:5173', // Allow your frontend
+//   credentials: true               // Important if you're using Clerk (auth headers/cookies)
+// }));
+// app.use(ClerkExpressWithAuth()); 
 app.use(express.json());
-app.use(cors());
-// app.use(ClerkExpressWithAuth()); // Corrected middleware usage
+
+// Corrected middleware usage
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/entrepreneurDB', {

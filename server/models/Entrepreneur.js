@@ -21,6 +21,10 @@ const entrepreneurSchema = new mongoose.Schema({
       },
       message: "Enter a valid URL!",
     },},
+    certificate:{
+      type:String,
+      required:true
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Entrepreneur', entrepreneurSchema);

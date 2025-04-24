@@ -1,210 +1,256 @@
+// client/src/components/EntrepreneurForm.js
 import React, { useState } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 import FormInput from './FormInput';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import '../styles/App.css';
+import * as pdfjsLib from "pdfjs-dist";
+import './pdfWorker';
+// import { set } from 'mongoose';
+
+// pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 const EntrepreneurForm = () => {
-  const [formData, setFormData] = useState({
-    rollNo: '',
-    candidateName: '',
-    academicYear: '',
-    enterpriseName: '',
-    address: '',
-    email: '',
-    phone: '',
-    dinPan: '',
-    establishmentPeriod: '',
-    websiteUrl: '',
-  });
+    const [formData, setFormData] = useState({
+        candidateName: '',
+        enterpriseName: '',
+        rollno: '',
+        address: '',
+        email: '',
+        phone: '',
+        dinPan: '',
+        establishmentPeriod: '',
+        websiteUrl: '',
+        certificate: null // Holds the uploaded File object
+    });
+    const [loading, setLoading] = useState(false);
+    const [uploadError, setUploadError] = useState(null); // State for upload errors
 
-  const [errors, setErrors] = useState({});
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        setFormData(prev => ({
+            ...prev,
+            certificate: file
+        }));
+        setUploadError(null); // Clear any previous upload error
+    };
 
-  const validateForm = () => {
-    const newErrors = {};
-    // Validate Roll Number
-    if (!formData.rollNo) {
-      newErrors.rollNo = 'Roll Number is required';
-    }
-
-    // Validate Academic Year (in the format YYYY-YYYY)
-    if (!formData.academicYear || !/^\d{4}-\d{4}$/.test(formData.academicYear)) {
-      newErrors.academicYear = 'Please enter a valid academic year (e.g., 2020-2024).';
-    } else {
-      const [startYear, endYear] = formData.academicYear.split('-');
-      if (parseInt(startYear) >= parseInt(endYear)) {
-        newErrors.academicYear = 'Start year must be earlier than end year.';
-      }
-    }
-
-    // Validate Website URL
-    if (formData.websiteUrl && !/^(https?:\/\/)?([\w\d\-]+\.)+\w{2,}(\/.*)?$/.test(formData.websiteUrl)) {
-      newErrors.websiteUrl = 'Enter a valid URL!';
-    }
-
-    // Validate Email
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Enter a valid email!';
-    }
-
-    // Validate Phone Number
-    if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number must be 10 digits.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      try {
-        const response = await axios.post('http://localhost:5000/api/entrepreneurs', formData);
-        alert('Entrepreneur registered successfully!');
-        setFormData({
-          rollNo: '',
-          candidateName: '',
-          academicYear: '',
-          enterpriseName: '',
-          address: '',
-          email: '',
-          phone: '',
-          dinPan: '',
-          establishmentPeriod: '',
-          websiteUrl: '',
+    async function extractTextFromPdf(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const typedarray = new Uint8Array(reader.result);
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let text = '';
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        text += content.items.map(s => s.str).join(' ') + '\n';
+                    }
+                    resolve(text);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = () => {
+                reject(new Error('FileReader error: Failed to read the PDF file.'));
+            };
+            reader.readAsArrayBuffer(file);
         });
-      } catch (error) {
-        console.error('Registration failed:', error);
-        alert('Registration failed. Please try again.');
-      }
     }
-  };
 
-  return (
-    <div className="container">
-      <form onSubmit={handleSubmit}>
-        <h2 className="form-title">Entrepreneur Registration</h2>
-        
-        <div className="form-group">
-          <FormInput
-            label="Roll Number"
-            name="rollNo"
-            value={formData.rollNo}
-            onChange={handleChange}
-            required
-          />
-          {errors.rollNo && <p className="error">{errors.rollNo}</p>}
+    async function certify(data) {
+        try {
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            if (!data.certificate) {
+                throw new Error("No certificate file uploaded.");
+            }
+            const pdfText = await extractTextFromPdf(data.certificate);
+            console.log 
+            const prompt = 
+            `You are given the text content of a GST registration certificate. Analyze it and verify the following:
+
+        1. Is the name "${data.candidateName}" mentioned as a "Director" or a "Key Managerial Person" within the details of the enterprise "${data.enterpriseName}"?
+        2. Does the legal name or trade name on the certificate match "${data.enterpriseName}"?
+
+        If *both conditions are true*, respond with:
+        {
+            "valid": true
+        }
+
+        If *any one of the conditions is false*, respond with:
+        {
+            "valid": false
+        }
+
+        Respond only in raw JSON. Do not include any formatting like triple backticks or markdown.`;
+
+
+            const result = await model.generateContent([prompt, { text: pdfText }]);
+            const text = await result.response.text();
+            let jsonStr = text
+            .replace(/```json/g, '')
+            .replace(/```/g, '')
+            .trim();
+          
+          try {
+              return JSON.parse(jsonStr);
+          } catch (parseError) {
+              console.error("Gemini API Error: Invalid JSON response", parseError);
+              console.error("Received text:", text); // helpful for debugging
+              throw new Error("Gemini API Error: Invalid response format");
+          }
+          
+        } catch (error) {
+            console.error("Certificate Validation Error:", error.message);
+            // throw new Error("Certificate validation failed.");
+        }
+    }
+    
+    
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+            setUploadError(null);
+    
+            const validationResult = await certify(formData);
+    
+            if (validationResult && validationResult.valid === true) {
+                console.log("formData before sending:", formData); // Add this line
+                const formDataToSend = new FormData();
+                for (const key in formData) {
+                    formDataToSend.append(key, formData[key]);
+                }
+                console.log(formDataToSend)
+                const response= await fetch('http://localhost:5000/api/entrepreneurs', {
+                    method: 'POST',
+                    body: formDataToSend // don't set Content-Type!
+                  });
+                  
+                alert('Entrepreneur registered successfully!');
+                setFormData(
+                    {
+                        candidateName: '',
+                        enterpriseName: '',
+                        rollno: '',
+                        address: '',
+                        email: '',
+                        phone: '',
+                        dinPan: '',
+                        establishmentPeriod: '',
+                        websiteUrl: '',
+                        certificate: null   
+                    }
+                )
+            } else {
+                alert("Invalid certificate. Please verify and try again.");
+            }
+        } catch (error) {
+            console.error('Registration failed:', error);
+            setUploadError(error.message || 'Registration failed. Please try again.');
+            alert('Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="container">
+            <form onSubmit={handleSubmit}>
+                <h2 className="form-title">Entrepreneur Registration</h2>
+                <FormInput
+                    label="Candidate Name"
+                    name="candidateName"
+                    value={formData.candidateName}
+                    onChange={handleChange}
+                    required
+                />
+                <FormInput
+                    label="Enterprise Name"
+                    name="enterpriseName"
+                    value={formData.enterpriseName}
+                    onChange={handleChange}
+                    required
+                />
+                <FormInput
+                    label="Roll No"
+                    name="rollno"
+                    value={formData.rollno}
+                    onChange={handleChange}
+                    required
+                />
+                <FormInput
+                    label="Address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    required
+                />
+                <FormInput
+                    label="Email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+
+                />
+                <FormInput
+                    label="Phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                />
+                <FormInput
+                    label="DIN/PAN"
+                    name="dinPan"
+                    value={formData.dinPan}
+                    onChange={handleChange}
+                />
+                <FormInput
+                    label="Establishment Period"
+                    name="establishmentPeriod"
+                    value={formData.establishmentPeriod}
+                    onChange={handleChange}
+                />
+
+                <FormInput
+                    label="Website URL"
+                    type="url"
+                    name="websiteUrl"
+                    value={formData.websiteUrl}
+                    onChange={handleChange}
+                />
+                <div className="form-group">
+                    <label htmlFor="certificate">Certificate Upload</label>
+                    <input
+                        type="file"
+                        id="certificate"
+                        name="certificate"
+                        accept=".pdf"
+                        onChange={handleFileChange}
+                        required
+                    />
+                    {uploadError && <p className="error-message">{uploadError}</p>}
+                </div>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                    {loading ? "Registering..." : "Register Entrepreneur"}
+                </button>
+            </form>
         </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Candidate Name"
-            name="candidateName"
-            value={formData.candidateName}
-            onChange={handleChange}
-            required
-          />
-          {errors.candidateName && <p className="error">{errors.candidateName}</p>}
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Academic Year"
-            name="academicYear"
-            value={formData.academicYear}
-            onChange={handleChange}
-            required
-          />
-          {errors.academicYear && <p className="error">{errors.academicYear}</p>}
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Enterprise Name"
-            name="enterpriseName"
-            value={formData.enterpriseName}
-            onChange={handleChange}
-            required
-          />
-          {errors.enterpriseName && <p className="error">{errors.enterpriseName}</p>}
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            required
-          />
-          {errors.address && <p className="error">{errors.address}</p>}
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          {errors.email && <p className="error">{errors.email}</p>}
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-          />
-          {errors.phone && <p className="error">{errors.phone}</p>}
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="DIN/PAN"
-            name="dinPan"
-            value={formData.dinPan}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Establishment Period"
-            name="establishmentPeriod"
-            value={formData.establishmentPeriod}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="form-group">
-          <FormInput
-            label="Website URL"
-            type="url"
-            name="websiteUrl"
-            value={formData.websiteUrl}
-            onChange={handleChange}
-          />
-          {errors.websiteUrl && <p className="error">{errors.websiteUrl}</p>}
-        </div>
-
-        <button type="submit" className="submit-btn">
-          Register Entrepreneur
-        </button>
-      </form>
-    </div>
-  );
+    );
 };
 
 export default EntrepreneurForm;

@@ -222,7 +222,7 @@
 // };
 
 // export default Report;
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from "@clerk/clerk-react";
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
@@ -245,43 +245,36 @@ const Report = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const token = await getToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      if (!token) throw new Error("No authentication token found");
+      console.log("Token:", token);
 
       const res = await fetch('http://localhost:5000/api/entrepreneurs', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch data. Status: ${res.status}`);
-      }
+      console.log(res.message)
+      if (!res.ok) throw new Error(`Failed to fetch data. Status: ${res.status}`);
 
       const responseData = await res.json();
-      if (Array.isArray(responseData)) {
-        setData(responseData);
-        setFilteredData(responseData);
-      } else {
-        throw new Error("Data is not an array");
-      }
+      if (!Array.isArray(responseData)) throw new Error("Data is not an array");
+
+      setData(responseData);
+      setFilteredData(responseData);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(error.message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     fetchData();
-  }, [getToken]);
+  }, [fetchData]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -313,9 +306,7 @@ const Report = () => {
   const applyFilters = () => {
     let updated = [...data];
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        updated = updated.filter(item => item[key] === value);
-      }
+      if (value) updated = updated.filter(item => item[key] === value);
     });
     setFilteredData(updated);
     setShowFilterSidebar(false);
@@ -348,32 +339,22 @@ const Report = () => {
     if (!rollNo) return;
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const token = await getToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      if (!token) throw new Error("No authentication token found");
 
       if (operation === 'delete') {
         const res = await fetch(`http://localhost:5000/api/entrepreneurs/${rollNo}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-
-        if (!res.ok) {
-          throw new Error(`Failed to delete. Status: ${res.status}`);
-        }
-        
-        // Update the state instead of reloading the page
+        if (!res.ok) throw new Error(`Failed to delete. Status: ${res.status}`);
         setData(prev => prev.filter(item => item.rollNo !== rollNo));
         setFilteredData(prev => prev.filter(item => item.rollNo !== rollNo));
         setRollNo('');
         setOperation('');
         setShowModifySidebar(false);
-        
       } else if (operation === 'update') {
         const newEmail = prompt('Enter new email:');
         if (newEmail) {
@@ -385,18 +366,11 @@ const Report = () => {
             },
             body: JSON.stringify({ email: newEmail })
           });
-
-          if (!res.ok) {
-            throw new Error(`Failed to update. Status: ${res.status}`);
-          }
-          
-          const updatedData = await res.json();
-          
-          // Update the state instead of reloading the page
-          setData(prev => 
+          if (!res.ok) throw new Error(`Failed to update. Status: ${res.status}`);
+          setData(prev =>
             prev.map(item => item.rollNo === rollNo ? { ...item, email: newEmail } : item)
           );
-          setFilteredData(prev => 
+          setFilteredData(prev =>
             prev.map(item => item.rollNo === rollNo ? { ...item, email: newEmail } : item)
           );
           setRollNo('');

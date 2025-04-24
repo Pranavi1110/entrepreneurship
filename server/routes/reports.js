@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Entrepreneur = require('../models/Entrepreneur');
-const verifyAdmin = require('../middleware/verifyAdmin'); // ✅ import middleware
+// const verifyAdmin = require('../middleware/verifyAdmin');
+
 // Register Entrepreneur (no restriction)
 router.post('/entrepreneurs', async (req, res) => {
   try {
+    
     const newEntrepreneur = new Entrepreneur(req.body);
     await newEntrepreneur.save();
     res.status(201).json({ message: 'Entrepreneur registered successfully' });
@@ -14,17 +16,23 @@ router.post('/entrepreneurs', async (req, res) => {
   }
 });
 
-// ✅ Admin-only: Get Reports
+// Admin-only: Get Reports
 router.get('/entrepreneurs', async (req, res) => {
   try {
-    const { year } = req.query;
-    let reports;
-
-    if (year) {
-      reports = await Entrepreneur.find({ establishmentPeriod: year });
-    } else {
-      reports = await Entrepreneur.find();
+    const userId = req.auth?.userId;
+    console.log('userId:', userId);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
+
+    if (userId !== process.env.ADMIN_USER_ID) {
+      return res.status(403).json({ error: 'Forbidden: Not an admin' });
+    }
+
+    const { year } = req.query;
+    const reports = year
+      ? await Entrepreneur.find({ establishmentPeriod: year })
+      : await Entrepreneur.find();
 
     res.json(reports);
   } catch (error) {
