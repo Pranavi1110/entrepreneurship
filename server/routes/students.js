@@ -34,15 +34,19 @@ router.get('/:id', async (req, res) => {
 
 // Add a new student
 router.post('/', async (req, res) => {
-  const { slNo, name, htNo, linkedinUrl, role } = req.body;
+  const {       rollNo  ,
+    name  ,
+    linkedinUrl , 
+    role  ,
+    passedOutYear } = req.body;
 
   try {
     const newStudent = new Student({
-      slNo,
-      name,
-      htNo,
-      linkedinUrl,
-      role
+      rollNo  ,
+name  ,
+linkedinUrl , 
+role  ,
+passedOutYear
     });
 
     const student = await newStudent.save();

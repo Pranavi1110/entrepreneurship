@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import UploadCSV from "./uploadCSV";
 
 const StudentTable = () => {
   const [students, setStudents] = useState([]);
@@ -7,10 +8,10 @@ const StudentTable = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/students');
+        const res = await axios.get("http://localhost:5000/api/students");
         setStudents(res.data);
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error("Error fetching students:", error);
       }
     };
 
@@ -35,28 +36,33 @@ const StudentTable = () => {
 
   function generateLinkedInUrl(name) {
     const nameParts = name.trim().split(/\s+/);
-    const includesVNR = nameParts.some(part => part.toLowerCase() === 'vnr');
-    const filteredParts = nameParts.filter(part => part.toLowerCase() !== 'vnr');
+    const includesVNR = nameParts.some((part) => part.toLowerCase() === "vnr");
+    const filteredParts = nameParts.filter(
+      (part) => part.toLowerCase() !== "vnr"
+    );
     const firstName = filteredParts[0];
-    const lastName = filteredParts.length > 1 ? filteredParts[filteredParts.length - 1] : '';
-    const keyword = `${firstName}${lastName ? '+' + lastName : ''}${includesVNR ? '+VNR' : ''}`;
+    const lastName =
+      filteredParts.length > 1 ? filteredParts[filteredParts.length - 1] : "";
+    const keyword = `${firstName}${lastName ? "+" + lastName : ""}${
+      includesVNR ? "+VNR" : ""
+    }`;
     return `https://www.linkedin.com/search/results/people/?keywords=${keyword}`;
   }
-  
-  
 
   const fetchRoleFromBing = async (name) => {
     try {
       const query = `site:linkedin.com/in "${name}" VNR`;
       const response = await axios.get(
-        `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.bing.com/search?q=' + encodeURIComponent(query))}`
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(
+          "https://www.bing.com/search?q=" + encodeURIComponent(query)
+        )}`
       );
       const parser = new DOMParser();
       const doc = parser.parseFromString(response.data, "text/html");
       const snippetElement = doc.querySelector(".b_caption p");
       return snippetElement ? snippetElement.textContent : "N/A";
     } catch (error) {
-      console.error('Error fetching role from Bing:', error);
+      console.error("Error fetching role from Bing:", error);
       return "N/A";
     }
   };
@@ -65,6 +71,7 @@ const StudentTable = () => {
     <div className="container mt-5">
       <h2 className="mb-4">Student List</h2>
       <div className="table-responsive">
+        <UploadCSV />
         <table className="table table-striped table-bordered">
           <thead className="table-dark">
             <tr>
@@ -82,11 +89,15 @@ const StudentTable = () => {
                 <td>{student.name}</td>
                 <td>{student.htNo}</td>
                 <td>
-                  <a href={generateLinkedInUrl(student.name)} target="_blank" rel="noreferrer">
+                  <a
+                    href={generateLinkedInUrl(student.name)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     View
                   </a>
                 </td>
-                <td>{student.role || 'Not Found'}</td>
+                <td>{student.role || "Not Found"}</td>
               </tr>
             ))}
           </tbody>
