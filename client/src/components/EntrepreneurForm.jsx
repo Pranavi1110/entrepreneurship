@@ -16,7 +16,7 @@ const EntrepreneurForm = () => {
     const [formData, setFormData] = useState({
         candidateName: '',
         enterpriseName: '',
-        rollno: '',
+        rollNo: '',
         address: '',
         email: '',
         phone: '',
@@ -131,20 +131,30 @@ const EntrepreneurForm = () => {
                 console.log("formData before sending:", formData); // Add this line
                 const formDataToSend = new FormData();
                 for (const key in formData) {
-                    formDataToSend.append(key, formData[key]);
+                    if (formData[key] !== null && formData[key] !== ''&&key!="certificate") { // Check for empty fields
+                        formDataToSend.append(key, formData[key]);
+                    }
                 }
                 console.log(formDataToSend)
-                const response= await fetch('http://localhost:5000/api/entrepreneurs', {
-                    method: 'POST',
-                    body: formDataToSend // don't set Content-Type!
+                const response = await fetch('http://localhost:5000/api/entrepreneurs', {
+                    method:'POST',
+                    body:formDataToSend
+                  
                   });
                   
+                  if (!response.ok) {
+                    console.log('Error:', response.status);
+                  } else {
+                    const data = await response.json();
+                  }
+                  
+                console.log(response)
                 alert('Entrepreneur registered successfully!');
                 setFormData(
                     {
                         candidateName: '',
                         enterpriseName: '',
-                        rollno: '',
+                        rollNo: '',
                         address: '',
                         email: '',
                         phone: '',

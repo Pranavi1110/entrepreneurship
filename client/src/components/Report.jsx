@@ -223,7 +223,7 @@
 
 // export default Report;
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
@@ -243,25 +243,35 @@ const Report = () => {
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUser();
   const [error, setError] = useState(null);
 
   const fetchData = useCallback(async () => {
+    if (!user) return; // 👈 Prevent running if user is not yet available
+  
     setIsLoading(true);
     setError(null);
+  
     try {
       const token = await getToken();
       if (!token) throw new Error("No authentication token found");
+  
       console.log("Token:", token);
-
-      const res = await fetch('http://localhost:5000/api/entrepreneurs', {
-        headers: { 'Authorization': `Bearer ${token}` },
+      console.log("User ID:", user.id);
+  
+      const res = await fetch(`http://localhost:5000/api/entrepreneurs/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
-      console.log(res.message)
+  
+      console.log("Response status:", res.status);
+  
       if (!res.ok) throw new Error(`Failed to fetch data. Status: ${res.status}`);
-
+  
       const responseData = await res.json();
       if (!Array.isArray(responseData)) throw new Error("Data is not an array");
-
+  
       setData(responseData);
       setFilteredData(responseData);
     } catch (error) {
@@ -270,7 +280,8 @@ const Report = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, user]);
+  
 
   useEffect(() => {
     fetchData();

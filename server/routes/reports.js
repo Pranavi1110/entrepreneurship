@@ -1,13 +1,38 @@
 const express = require('express');
 const router = express.Router();
 const Entrepreneur = require('../models/Entrepreneur');
-// const verifyAdmin = require('../middleware/verifyAdmin');
+// const multer = require('multer');
+// const upload = multer({ storage: multer.memoryStorage() }); // or use diskStorage
 
-// Register Entrepreneur (no restriction)
-router.post('/entrepreneurs', async (req, res) => {
+router.post('/entrepreneurs',  async (req, res) => {
   try {
-    
-    const newEntrepreneur = new Entrepreneur(req.body);
+    console.log(req.body);
+    const {
+      candidateName,
+      enterpriseName,
+      rollNo,
+      address,
+      email,
+      phone,
+      dinPan,
+      establishmentPeriod,
+      websiteUrl
+    } = req.body;
+
+  
+
+    const newEntrepreneur = new Entrepreneur({
+      candidateName,
+      enterpriseName,
+      rollNo,
+      address,
+      email,
+      phone,
+      dinPan,
+      establishmentPeriod,
+      websiteUrl // Save the file buffer as base64 or store in cloud
+    });
+ 
     await newEntrepreneur.save();
     res.status(201).json({ message: 'Entrepreneur registered successfully' });
   } catch (error) {
@@ -16,16 +41,18 @@ router.post('/entrepreneurs', async (req, res) => {
   }
 });
 
+
 // Admin-only: Get Reports
-router.get('/entrepreneurs', async (req, res) => {
+router.get('/entrepreneurs/:id', async (req, res) => {
   try {
-    const userId = req.auth?.userId;
+    // const userId = req.auth?.userId;
+    const userId = req.params;
     console.log('userId:', userId);
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (userId !== process.env.ADMIN_USER_ID) {
+    if (userId.id !== process.env.ADMIN_USER_ID) {
       return res.status(403).json({ error: 'Forbidden: Not an admin' });
     }
 

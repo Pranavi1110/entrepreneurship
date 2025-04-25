@@ -14,17 +14,12 @@ const entrepreneurSchema = new mongoose.Schema({
   dinPan: { type: String },
   establishmentPeriod: { type: String },
   websiteUrl: { type: String,
-    required: true,
     validate: {
       validator: function (v) {
         return /^(https?:\/\/)?([\w\d\-]+\.)+\w{2,}(\/.*)?$/.test(v);
       },
       message: "Enter a valid URL!",
-    },},
-    certificate:{
-      type:String,
-      required:true
-    }
+    },}
 }, { timestamps: true });
 
 module.exports = mongoose.model('Entrepreneur', entrepreneurSchema);
