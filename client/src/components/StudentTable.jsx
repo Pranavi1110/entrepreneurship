@@ -83,11 +83,11 @@ const StudentTable = () => {
             </tr>
           </thead>
           <tbody>
-            {students.map((student) => (
+            {students.map((student, idx = 1) => (
               <tr key={student._id}>
-                <td>{student.slNo}</td>
+                <td>{idx}</td>
                 <td>{student.name}</td>
-                <td>{student.htNo}</td>
+                <td>{student.rollNo}</td>
                 <td>
                   <a
                     href={generateLinkedInUrl(student.name)}
