@@ -3,7 +3,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const clerk = require('@clerk/express'); // Corrected import'
-
 const app = express();
 const reportRoutes = require('./routes/reports');
 const studentRoutes = require('./routes/students');

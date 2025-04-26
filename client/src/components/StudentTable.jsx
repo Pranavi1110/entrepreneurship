@@ -17,22 +17,42 @@ const StudentTable = () => {
 
     fetchStudents();
   }, []);
-
   useEffect(() => {
-    const fetchRoles = async () => {
-      const updatedStudents = await Promise.all(
-        students.map(async (student) => {
-          const role = await fetchRoleFromBing(student.name);
-          return { ...student, role };
-        })
-      );
-      setStudents(updatedStudents);
+    const fetchStudentsWithRoles = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/students");
+
+        const studentsWithRoles = await Promise.all(
+          res.data.map(async (student) => {
+            const role = await fetchRoleFromBing(student.name);
+            return { ...student, role };
+          })
+        );
+
+        setStudents(studentsWithRoles);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
     };
 
-    if (students.length > 0 && !students[0].role) {
-      fetchRoles();
-    }
-  }, [students]);
+    fetchStudentsWithRoles();
+  }, []);
+
+  // useEffect(() => {
+  //   const fetchRoles = async () => {
+  //     const updatedStudents = await Promise.all(
+  //       students.map(async (student) => {
+  //         const role = await fetchRoleFromBing(student.name);
+  //         return { ...student, role };
+  //       })
+  //     );
+  //     setStudents(updatedStudents);
+  //   };
+
+  //   if (students.length > 0 && !students[0].role) {
+  //     fetchRoles();
+  //   }
+  // }, [students]);
 
   function generateLinkedInUrl(name) {
     const nameParts = name.trim().split(/\s+/);
@@ -83,9 +103,9 @@ const StudentTable = () => {
             </tr>
           </thead>
           <tbody>
-            {students.map((student, idx = 1) => (
+            {students.map((student, idx) => (
               <tr key={student._id}>
-                <td>{idx}</td>
+                <td>{idx + 1}</td>
                 <td>{student.name}</td>
                 <td>{student.rollNo}</td>
                 <td>
