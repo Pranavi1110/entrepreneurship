@@ -1,81 +1,31 @@
-// const fs = require('fs');
-// const csv = require('csv-parser');
-// const Student = require('./models/Student');
-
-// async function importCSV(filePath) {
-//   const results = [];
-
-//   return new Promise((resolve, reject) => {
-//     fs.createReadStream(filePath)
-//       .pipe(csv())
-//       .on('data', (data) => {
-//         // Map CSV headers to schema fields
-//         results.push({
-//           rollNo: data.rollNo,           // mapped from htNo
-//           name: data.name,             // as-is
-//           linkedinUrl: '',             // optional: add default values
-//           role: '',
-//           passedOutYear: ''
-//         });
-//       })
-//       .on('end', async () => {
-//         try {
-//           console.log(results);
-//           await Student.insertMany(results);
-//           console.log("Data imported successfully");
-//           resolve();
-//         } catch (err) {
-//           console.error("Error importing data:", err);
-//           reject(err);
-//         }
-//       });
-//   });
-// }
-
-// module.exports = importCSV;
 const fs = require('fs');
 const csv = require('csv-parser');
 const Student = require('./models/Student');
 const axios = require('axios'); // for role fetching if needed
 const cheerio=require('cheerio');
 
-// async function fetchRoleFromBing(name) {
-//   try {
-//     const query = `site:linkedin.com/in "${name}" VNR`;
-//     const response = await axios.get(
-//       `https://api.allorigins.win/raw?url=${encodeURIComponent(
-//         "https://www.bing.com/search?q=" + encodeURIComponent(query)
-//       )}`
-//     );
-
-//     // Use Cheerio to parse HTML (instead of DOMParser)
-//     const $ = cheerio.load(response.data);
-//     const roleText = $(".b_caption p").first().text();
-
-//     if (roleText) {
-//       return roleText;
-//     } else {
-//       return "Role not found";
-//     }
-//   } catch (error) {
-//     console.error("Error fetching role from Bing:", error.message);
-//     return "N/A";
-//   }
-// }
-async function fetchRoleFromBing(name) {
+async function fetchRoleFromGoogle(name) {
   try {
-    const query = `site:linkedin.com/in "${name}" VNR`;
-    const response = await axios.get(
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(
-        "https://www.bing.com/search?q=" + encodeURIComponent(query)
-      )}`
-    );
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(response.data, "text/html");
-    const snippetElement = doc.querySelector(".b_caption p");
-    return snippetElement ? snippetElement.textContent : "N/A";
+    const query = `${name} site:linkedin.com/in`;
+    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+
+    // Use allorigins to bypass CORS
+    const response = await axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(googleSearchUrl)}`);
+
+    const $ = cheerio.load(response.data);
+
+    // First result title
+    const firstResultTitle = $("h3").first().text();
+
+    if (firstResultTitle.includes('-')) {
+      const role = firstResultTitle.split('-')[1].trim();
+      return role;
+    } else {
+      return "Role not found";
+    }
+
   } catch (error) {
-    console.error("Error fetching role from Bing:", error.message);
+    console.error("Error fetching role from Google:", error.message);
     return "N/A";
   }
 }
@@ -119,7 +69,7 @@ async function importCSV(filePath) {
           for (const student of insertedStudents) {
             const linkedinUrl = generateLinkedInUrl(student.name);
             // Optional: Fetch role from Bing
-            const role = await fetchRoleFromBing(student.name);
+            const role = await fetchRoleFromGoogle(student.name);
 
             await Student.findByIdAndUpdate(student._id, {
               linkedinUrl: linkedinUrl,
