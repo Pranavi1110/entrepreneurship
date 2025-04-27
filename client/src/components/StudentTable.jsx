@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UploadCSV from "./UploadCSV";
-import './StudentTable.css'; // Import the CSS file for custom styling
+import './StudentTable.css'; // Linked properly
 
 const StudentTable = () => {
   const [students, setStudents] = useState([]);
   const [selectedYearRange, setSelectedYearRange] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortOption, setSortOption] = useState("");
 
   useEffect(() => {
-    const fetchStudentsWithRoles = async () => {
+    const fetchStudents = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/students");
         setStudents(res.data);
@@ -21,7 +21,7 @@ const StudentTable = () => {
       }
     };
 
-    fetchStudentsWithRoles();
+    fetchStudents();
   }, []);
 
   const getYearRange = (rollNo) => {
@@ -33,123 +33,90 @@ const StudentTable = () => {
   };
 
   const yearRanges = [...new Set(students.map((s) => getYearRange(s.rollNo)))].filter((yr) => yr !== "Unknown");
-  const roles = [...new Set(students.map((s) => s.role || "Not Found"))];
+  const roles = [...new Set(students.map((s) => s.role || "N/A"))];
 
-  let filteredStudents = students;
-
-  if (selectedYearRange) {
-    filteredStudents = filteredStudents.filter((s) => getYearRange(s.rollNo) === selectedYearRange);
-  }
-
-  if (selectedRole) {
-    filteredStudents = filteredStudents.filter((s) => (s.role || "Not Found") === selectedRole);
-  }
-
-  if (searchTerm) {
-    const lowerSearch = searchTerm.toLowerCase();
-    filteredStudents = filteredStudents.filter((s) =>
-      s.name.toLowerCase().includes(lowerSearch) ||
-      s.rollNo.toLowerCase().includes(lowerSearch) ||
-      (s.role && s.role.toLowerCase().includes(lowerSearch))
+  let filteredStudents = students
+    .filter((student) => 
+      (!selectedYearRange || getYearRange(student.rollNo) === selectedYearRange) &&
+      (!selectedRole || student.role === selectedRole) &&
+      (student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       student.rollNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (student.role || "").toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+  if (sortOption === "name") {
+    filteredStudents = filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortOption === "rollNo") {
+    filteredStudents = filteredStudents.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
   }
-
-  if (sortField) {
-    filteredStudents.sort((a, b) => {
-      const fieldA = (a[sortField] || "").toLowerCase();
-      const fieldB = (b[sortField] || "").toLowerCase();
-
-      if (fieldA < fieldB) return sortOrder === "asc" ? -1 : 1;
-      if (fieldA > fieldB) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-  }
-
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-  };
 
   return (
-    <div className="container mt-5">
-      <h2 className="mb-4 text-center">Student List</h2>
+    <div className="student-container">
+      <h2 className="heading">Student List</h2>
 
-      <div className="controls mb-4 d-flex flex-wrap justify-content-between align-items-center">
-        <div className="filters d-flex flex-wrap">
-          <div className="filter me-3">
-            <label htmlFor="yearSelect" className="form-label">Batch</label>
+      <div className="top-bar">
+        <input
+          type="text"
+          className="search-bar"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        <button className="filter-btn" onClick={() => setIsFilterOpen(true)}>Filters</button>
+
+        <select
+          className="sort-dropdown"
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+        >
+          <option value="">Sort By</option>
+          <option value="name">Name</option>
+          <option value="rollNo">Roll No</option>
+        </select>
+
+        <UploadCSV />
+      </div>
+
+      {/* Sidebar for filters */}
+      {isFilterOpen && (
+        <div className="sidebar">
+          <button className="close-btn" onClick={() => setIsFilterOpen(false)}>×</button>
+          <h5>Filters</h5>
+          <div className="filter-section">
+            <label>Batch</label>
             <select
-              id="yearSelect"
-              className="form-select"
+              className="filter-dropdown"
               value={selectedYearRange}
               onChange={(e) => setSelectedYearRange(e.target.value)}
             >
               <option value="">All Batches</option>
               {yearRanges.map((range) => (
-                <option key={range} value={range}>
-                  {range}
-                </option>
+                <option key={range} value={range}>{range}</option>
               ))}
             </select>
           </div>
-
-          <div className="filter me-3">
-            <label htmlFor="roleSelect" className="form-label">Role</label>
+          <div className="filter-section">
+            <label>Role</label>
             <select
-              id="roleSelect"
-              className="form-select"
+              className="filter-dropdown"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
             >
               <option value="">All Roles</option>
               {roles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
+                <option key={role} value={role}>{role}</option>
               ))}
             </select>
           </div>
-
-          <div className="filter me-3">
-            <label htmlFor="searchInput" className="form-label">Search</label>
-            <input
-              type="text"
-              id="searchInput"
-              className="form-control"
-              placeholder="Search by name, roll no, role..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <button className="apply-btn" onClick={() => setIsFilterOpen(false)}>Apply Filters</button>
         </div>
+      )}
 
-        <div className="upload-wrapper">
-          <UploadCSV />
-        </div>
-      </div>
-
-      <div className="sort-buttons mb-3 d-flex justify-content-end">
-        <button
-          className="btn btn-outline-primary me-2"
-          onClick={() => handleSort("name")}
-        >
-          Sort by Name {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
-        </button>
-        <button
-          className="btn btn-outline-primary"
-          onClick={() => handleSort("rollNo")}
-        >
-          Sort by Roll No {sortField === "rollNo" && (sortOrder === "asc" ? "↑" : "↓")}
-        </button>
-      </div>
-
+      {/* Table */}
       <div className="table-responsive">
-        <table className="table table-striped table-bordered shadow-sm">
-          <thead className="table-dark">
+        <table className="student-table">
+          <thead>
             <tr>
               <th>Sl. No</th>
               <th>Name</th>
@@ -165,16 +132,11 @@ const StudentTable = () => {
                 <td>{student.name}</td>
                 <td>{student.rollNo}</td>
                 <td>
-                  <a
-                    href={student.linkedinUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-info btn-sm"
-                  >
+                  <a href={student.linkedinUrl} target="_blank" rel="noreferrer" className="view-btn">
                     View
                   </a>
                 </td>
-                <td>{student.role || "Not Found"}</td>
+                <td>{student.role || "N/A"}</td>
               </tr>
             ))}
           </tbody>
