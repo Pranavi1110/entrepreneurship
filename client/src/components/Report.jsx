@@ -27,9 +27,6 @@
 //       });
 //   }, []);
 
-  
-  
-
 //   const handleSearch = (e) => {
 //     const value = e.target.value;
 //     setSearchTerm(value);
@@ -222,23 +219,23 @@
 // };
 
 // export default Report;
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
-import { saveAs } from 'file-saver';
-import Papa from 'papaparse';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import './Report.css';
+import { saveAs } from "file-saver";
+import Papa from "papaparse";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import "./Report.css";
 
 const Report = () => {
   const [data, setData] = useState([]);
   const { getToken } = useAuth();
   const [filteredData, setFilteredData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortKey, setSortKey] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState("");
   const [filters, setFilters] = useState({});
-  const [operation, setOperation] = useState('');
-  const [rollNo, setRollNo] = useState('');
+  const [operation, setOperation] = useState("");
+  const [rollNo, setRollNo] = useState("");
   const [showModifySidebar, setShowModifySidebar] = useState(false);
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
@@ -248,30 +245,34 @@ const Report = () => {
 
   const fetchData = useCallback(async () => {
     if (!user) return; // 👈 Prevent running if user is not yet available
-  
+
     setIsLoading(true);
     setError(null);
-  
+
     try {
       const token = await getToken();
       if (!token) throw new Error("No authentication token found");
-  
+
       console.log("Token:", token);
       console.log("User ID:", user.id);
-  
-      const res = await fetch(`http://localhost:5000/api/entrepreneurs/${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-  
+
+      const res = await fetch(
+        `http://localhost:5000/api/entrepreneurs/${user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       console.log("Response status:", res.status);
-  
-      if (!res.ok) throw new Error(`Failed to fetch data. Status: ${res.status}`);
-  
+
+      if (!res.ok)
+        throw new Error(`Failed to fetch data. Status: ${res.status}`);
+
       const responseData = await res.json();
       if (!Array.isArray(responseData)) throw new Error("Data is not an array");
-  
+
       setData(responseData);
       setFilteredData(responseData);
     } catch (error) {
@@ -281,7 +282,6 @@ const Report = () => {
       setIsLoading(false);
     }
   }, [getToken, user]);
-  
 
   useEffect(() => {
     fetchData();
@@ -291,9 +291,10 @@ const Report = () => {
     const value = e.target.value;
     setSearchTerm(value);
     setFilteredData(
-      data.filter(item =>
-        item.candidateName.toLowerCase().includes(value.toLowerCase()) ||
-        item.rollNo?.toString().includes(value)
+      data.filter(
+        (item) =>
+          item.candidateName.toLowerCase().includes(value.toLowerCase()) ||
+          item.rollNo?.toString().includes(value)
       )
     );
   };
@@ -311,13 +312,13 @@ const Report = () => {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const applyFilters = () => {
     let updated = [...data];
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) updated = updated.filter(item => item[key] === value);
+      if (value) updated = updated.filter((item) => item[key] === value);
     });
     setFilteredData(updated);
     setShowFilterSidebar(false);
@@ -325,13 +326,22 @@ const Report = () => {
 
   const exportCSV = () => {
     const csv = Papa.unparse(filteredData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'report.csv');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "report.csv");
   };
 
   const exportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ['S.No', 'Name', 'Enterprise', 'Email', 'Phone', 'Roll No', 'Academic Year', 'Establish Year'];
+    const tableColumn = [
+      "S.No",
+      "Name",
+      "Enterprise",
+      "Email",
+      "Phone",
+      "Roll No",
+      "Academic Year",
+      "Establish Year",
+    ];
     const tableRows = filteredData.map((item, index) => [
       index + 1,
       item.candidateName,
@@ -340,10 +350,10 @@ const Report = () => {
       item.phone,
       item.rollNo,
       item.academicYear,
-      item.establishYear
+      item.establishYear,
     ]);
     doc.autoTable(tableColumn, tableRows);
-    doc.save('report.pdf');
+    doc.save("report.pdf");
   };
 
   const handleOperation = async () => {
@@ -355,37 +365,50 @@ const Report = () => {
       const token = await getToken();
       if (!token) throw new Error("No authentication token found");
 
-      if (operation === 'delete') {
-        const res = await fetch(`http://localhost:5000/api/entrepreneurs/${rollNo}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+      if (operation === "delete") {
+        const res = await fetch(
+          `http://localhost:5000/api/entrepreneurs/${rollNo}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (!res.ok) throw new Error(`Failed to delete. Status: ${res.status}`);
-        setData(prev => prev.filter(item => item.rollNo !== rollNo));
-        setFilteredData(prev => prev.filter(item => item.rollNo !== rollNo));
-        setRollNo('');
-        setOperation('');
+        setData((prev) => prev.filter((item) => item.rollNo !== rollNo));
+        setFilteredData((prev) =>
+          prev.filter((item) => item.rollNo !== rollNo)
+        );
+        setRollNo("");
+        setOperation("");
         setShowModifySidebar(false);
-      } else if (operation === 'update') {
-        const newEmail = prompt('Enter new email:');
+      } else if (operation === "update") {
+        const newEmail = prompt("Enter new email:");
         if (newEmail) {
-          const res = await fetch(`http://localhost:5000/api/entrepreneurs/${rollNo}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ email: newEmail })
-          });
-          if (!res.ok) throw new Error(`Failed to update. Status: ${res.status}`);
-          setData(prev =>
-            prev.map(item => item.rollNo === rollNo ? { ...item, email: newEmail } : item)
+          const res = await fetch(
+            `http://localhost:5000/api/entrepreneurs/${rollNo}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ email: newEmail }),
+            }
           );
-          setFilteredData(prev =>
-            prev.map(item => item.rollNo === rollNo ? { ...item, email: newEmail } : item)
+          if (!res.ok)
+            throw new Error(`Failed to update. Status: ${res.status}`);
+          setData((prev) =>
+            prev.map((item) =>
+              item.rollNo === rollNo ? { ...item, email: newEmail } : item
+            )
           );
-          setRollNo('');
-          setOperation('');
+          setFilteredData((prev) =>
+            prev.map((item) =>
+              item.rollNo === rollNo ? { ...item, email: newEmail } : item
+            )
+          );
+          setRollNo("");
+          setOperation("");
           setShowModifySidebar(false);
         }
       }
@@ -420,9 +443,24 @@ const Report = () => {
             <option value="email">Email</option>
           </select>
 
-          <button className="filter-btn" onClick={() => setShowFilterSidebar(true)}>Filter</button>
-          <button className="download-btn" onClick={() => setShowDownloadOptions(!showDownloadOptions)}>Download</button>
-          <button className="modify-btn" onClick={() => setShowModifySidebar(true)}>Modify Records</button>
+          <button
+            className="filter-btn"
+            onClick={() => setShowFilterSidebar(true)}
+          >
+            Filter
+          </button>
+          <button
+            className="download-btn"
+            onClick={() => setShowDownloadOptions(!showDownloadOptions)}
+          >
+            Download
+          </button>
+          <button
+            className="modify-btn"
+            onClick={() => setShowModifySidebar(true)}
+          >
+            Modify Records
+          </button>
         </div>
 
         {showDownloadOptions && (
@@ -456,11 +494,13 @@ const Report = () => {
                   <td>{item.phone}</td>
                   <td>{item.rollNo}</td>
                   <td>{item.academicYear}</td>
-                  <td>{item.establishYear}</td>
+                  <td>{item.establishmentPeriod}</td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="8">No data available</td></tr>
+              <tr>
+                <td colSpan="8">No data available</td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -470,9 +510,17 @@ const Report = () => {
         <div className="sidebar">
           <div className="sidebar-header">
             <h3>Modify Records</h3>
-            <button className="close-btn" onClick={() => setShowModifySidebar(false)}>×</button>
+            <button
+              className="close-btn"
+              onClick={() => setShowModifySidebar(false)}
+            >
+              ×
+            </button>
           </div>
-          <select onChange={e => setOperation(e.target.value)} value={operation}>
+          <select
+            onChange={(e) => setOperation(e.target.value)}
+            value={operation}
+          >
             <option value="">Select Operation</option>
             <option value="delete">Delete</option>
             <option value="update">Update</option>
@@ -481,14 +529,14 @@ const Report = () => {
             type="text"
             placeholder="Enter Roll No"
             value={rollNo}
-            onChange={e => setRollNo(e.target.value)}
+            onChange={(e) => setRollNo(e.target.value)}
           />
-          <button 
-            className="submit-btn" 
+          <button
+            className="submit-btn"
             onClick={handleOperation}
             disabled={isLoading || !operation || !rollNo}
           >
-            {isLoading ? 'Processing...' : 'Submit'}
+            {isLoading ? "Processing..." : "Submit"}
           </button>
         </div>
       )}
@@ -497,26 +545,53 @@ const Report = () => {
         <div className="sidebar">
           <div className="sidebar-header">
             <h3>Apply Filters</h3>
-            <button className="close-btn" onClick={() => setShowFilterSidebar(false)}>×</button>
+            <button
+              className="close-btn"
+              onClick={() => setShowFilterSidebar(false)}
+            >
+              ×
+            </button>
           </div>
-          <select name="academicYear" onChange={handleFilterChange} defaultValue="">
+          <select
+            name="academicYear"
+            onChange={handleFilterChange}
+            defaultValue=""
+          >
             <option value="">Academic Year</option>
             <option value="2022-23">2022-23</option>
             <option value="2023-24">2023-24</option>
           </select>
-          <select name="enterpriseName" onChange={handleFilterChange} defaultValue="">
+          <select
+            name="enterpriseName"
+            onChange={handleFilterChange}
+            defaultValue=""
+          >
             <option value="">Enterprise</option>
-            {[...new Set(data.map(item => item.enterpriseName))].map((name, i) => (
-              <option key={i} value={name}>{name}</option>
-            ))}
+            {[...new Set(data.map((item) => item.enterpriseName))].map(
+              (name, i) => (
+                <option key={i} value={name}>
+                  {name}
+                </option>
+              )
+            )}
           </select>
-          <select name="establishYear" onChange={handleFilterChange} defaultValue="">
+          <select
+            name="establishYear"
+            onChange={handleFilterChange}
+            defaultValue=""
+          >
             <option value="">Establish Year</option>
-            {[...new Set(data.map(item => item.establishYear))].map((year, i) => (
-              <option key={i} value={year}>{year}</option>
-            ))}
+            {[...new Set(data.map((item) => item.establishYear))].map(
+              (year, i) => (
+                <option key={i} value={year}>
+                  {year}
+                </option>
+              )
+            )}
           </select>
-          <button className="submit-btn" onClick={applyFilters}>Apply Filter</button>
+          <button className="submit-btn" onClick={applyFilters}>
+            Apply Filter
+          </button>
         </div>
       )}
     </div>

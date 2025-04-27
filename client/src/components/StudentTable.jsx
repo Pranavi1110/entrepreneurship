@@ -5,31 +5,26 @@ import UploadCSV from "./uploadCSV";
 const StudentTable = () => {
   const [students, setStudents] = useState([]);
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/students");
-        setStudents(res.data);
-      } catch (error) {
-        console.error("Error fetching students:", error);
-      }
-    };
-
-    fetchStudents();
-  }, []);
+  // useEffect(() => {
+  //   const fetchStudents = async () => {
+  //     try {
+  //       const res = await axios.get("http://localhost:5000/api/students");
+  //       setStudents(res.data);
+  //     } catch (error) {
+  //       console.error("Error fetching students:", error);
+  //     }
+  //   };
+  //   fetchStudents();
+  // }, []);
   useEffect(() => {
     const fetchStudentsWithRoles = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/students");
 
-        const studentsWithRoles = await Promise.all(
-          res.data.map(async (student) => {
-            const role = await fetchRoleFromBing(student.name);
-            return { ...student, role };
-          })
-        );
+        // Fetch role for each student from Bing or any source
 
-        setStudents(studentsWithRoles);
+        // Update state with students that have roles
+        setStudents(res.data);
       } catch (error) {
         console.error("Error fetching students:", error);
       }
@@ -54,38 +49,38 @@ const StudentTable = () => {
   //   }
   // }, [students]);
 
-  function generateLinkedInUrl(name) {
-    const nameParts = name.trim().split(/\s+/);
-    const includesVNR = nameParts.some((part) => part.toLowerCase() === "vnr");
-    const filteredParts = nameParts.filter(
-      (part) => part.toLowerCase() !== "vnr"
-    );
-    const firstName = filteredParts[0];
-    const lastName =
-      filteredParts.length > 1 ? filteredParts[filteredParts.length - 1] : "";
-    const keyword = `${firstName}${lastName ? "+" + lastName : ""}${
-      includesVNR ? "+VNR" : ""
-    }`;
-    return `https://www.linkedin.com/search/results/people/?keywords=${keyword}`;
-  }
+  // function generateLinkedInUrl(name) {
+  //   const nameParts = name.trim().split(/\s+/);
+  //   const includesVNR = nameParts.some((part) => part.toLowerCase() === "vnr");
+  //   const filteredParts = nameParts.filter(
+  //     (part) => part.toLowerCase() !== "vnr"
+  //   );
+  //   const firstName = filteredParts[0];
+  //   const lastName =
+  //     filteredParts.length > 1 ? filteredParts[filteredParts.length - 1] : "";
+  //   const keyword = `${firstName}${lastName ? "+" + lastName : ""}${
+  //     includesVNR ? "+VNR" : ""
+  //   }`;
+  //   return `https://www.linkedin.com/search/results/people/?keywords=${keyword}`;
+  // }
 
-  const fetchRoleFromBing = async (name) => {
-    try {
-      const query = `site:linkedin.com/in "${name}" VNR`;
-      const response = await axios.get(
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(
-          "https://www.bing.com/search?q=" + encodeURIComponent(query)
-        )}`
-      );
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(response.data, "text/html");
-      const snippetElement = doc.querySelector(".b_caption p");
-      return snippetElement ? snippetElement.textContent : "N/A";
-    } catch (error) {
-      console.error("Error fetching role from Bing:", error);
-      return "N/A";
-    }
-  };
+  // const fetchRoleFromBing = async (name) => {
+  //   try {
+  //     const query = `site:linkedin.com/in "${name}" VNR`;
+  //     const response = await axios.get(
+  //       `https://api.allorigins.win/raw?url=${encodeURIComponent(
+  //         "https://www.bing.com/search?q=" + encodeURIComponent(query)
+  //       )}`
+  //     );
+  //     const parser = new DOMParser();
+  //     const doc = parser.parseFromString(response.data, "text/html");
+  //     const snippetElement = doc.querySelector(".b_caption p");
+  //     return snippetElement ? snippetElement.textContent : "N/A";
+  //   } catch (error) {
+  //     console.error("Error fetching role from Bing:", error);
+  //     return "N/A";
+  //   }
+  // };
 
   return (
     <div className="container mt-5">
@@ -110,7 +105,7 @@ const StudentTable = () => {
                 <td>{student.rollNo}</td>
                 <td>
                   <a
-                    href={generateLinkedInUrl(student.name)}
+                    href={student.linkedinUrl}
                     target="_blank"
                     rel="noreferrer"
                   >

@@ -37,7 +37,31 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const Student = require('./models/Student');
 const axios = require('axios'); // for role fetching if needed
+const cheerio=require('cheerio');
 
+// async function fetchRoleFromBing(name) {
+//   try {
+//     const query = `site:linkedin.com/in "${name}" VNR`;
+//     const response = await axios.get(
+//       `https://api.allorigins.win/raw?url=${encodeURIComponent(
+//         "https://www.bing.com/search?q=" + encodeURIComponent(query)
+//       )}`
+//     );
+
+//     // Use Cheerio to parse HTML (instead of DOMParser)
+//     const $ = cheerio.load(response.data);
+//     const roleText = $(".b_caption p").first().text();
+
+//     if (roleText) {
+//       return roleText;
+//     } else {
+//       return "Role not found";
+//     }
+//   } catch (error) {
+//     console.error("Error fetching role from Bing:", error.message);
+//     return "N/A";
+//   }
+// }
 async function fetchRoleFromBing(name) {
   try {
     const query = `site:linkedin.com/in "${name}" VNR`;
@@ -58,13 +82,13 @@ async function fetchRoleFromBing(name) {
 
 function generateLinkedInUrl(name) {
   const nameParts = name.trim().split(/\s+/);
-  const includesVNR = nameParts.some((part) => part.toLowerCase() === "vnr");
+  // const includesVNR = nameParts.some((part) => part.toLowerCase() === "vnr");
   const filteredParts = nameParts.filter(
     (part) => part.toLowerCase() !== "vnr"
   );
   const firstName = filteredParts[0];
   const lastName = filteredParts.length > 1 ? filteredParts[filteredParts.length - 1] : "";
-  const keyword = `${firstName}${lastName ? "+" + lastName : ""}${includesVNR ? "+VNR" : ""}`;
+  const keyword = `${firstName}${lastName ? "+" + lastName : ""}${"+VNR"}`;
   return `https://www.linkedin.com/search/results/people/?keywords=${keyword}`;
 }
 
@@ -95,12 +119,15 @@ async function importCSV(filePath) {
           for (const student of insertedStudents) {
             const linkedinUrl = generateLinkedInUrl(student.name);
             // Optional: Fetch role from Bing
-            // const role = await fetchRoleFromBing(student.name);
+            const role = await fetchRoleFromBing(student.name);
 
             await Student.findByIdAndUpdate(student._id, {
               linkedinUrl: linkedinUrl,
-              // role: role
+              role: role
             });
+            // const role=fetchRoleFromBing(student.name);
+
+            
           }
 
           console.log("LinkedIn URLs updated successfully");
