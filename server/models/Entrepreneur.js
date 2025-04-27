@@ -22,4 +22,4 @@ const entrepreneurSchema = new mongoose.Schema({
     },}
 }, { timestamps: true });
 
-module.exports = mongoose.model('Entrepreneur', entrepreneurSchema);
+module.exports = mongoose.model('entrepreneur', entrepreneurSchema);
