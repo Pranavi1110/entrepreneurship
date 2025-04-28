@@ -1,4 +1,4 @@
-/* UploadCSV Component Styles */
+/* UploadCSV Component Styles
 .upload-container {
     font-family: Arial, sans-serif;
     text-align: center;
@@ -50,5 +50,17 @@
   .upload-container button:disabled {
     background-color: #c6c6c6;
     cursor: not-allowed;
+  } */
+  .ab{
+ margin-left: 200px;
+ margin-bottom: 50px;
   }
+  .up{
+    background-color: #D2665A;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+  }
+  
   
