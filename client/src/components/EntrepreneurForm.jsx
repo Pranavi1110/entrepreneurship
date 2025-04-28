@@ -1,4 +1,3 @@
-// client/src/components/EntrepreneurForm.js
 import React, { useState } from "react";
 // import axios from 'axios';
 import FormInput from "./FormInput";
@@ -11,6 +10,63 @@ import "./pdfWorker";
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+
+// Add custom CSS for theme styling
+const formStyles = {
+  container: {
+    border: "1px solid #F2B28C",
+    borderRadius: "8px",
+    padding: "30px",
+    maxWidth: "800px",
+    margin: "40px auto",
+    boxShadow: "0 4px 12px rgba(242, 178, 140, 0.15)",
+    backgroundColor: "#fff",
+  },
+  formTitle: {
+    color: "#B82132",
+    borderBottom: "2px solid #F6DED8",
+    paddingBottom: "10px",
+    marginBottom: "25px",
+    textAlign: "center",
+  },
+  formGroup: {
+    marginBottom: "20px",
+  },
+  label: {
+    display: "block",
+    marginBottom: "8px",
+    color: "#333",
+    fontWeight: "500",
+  },
+  fileInput: {
+    width: "100%",
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    backgroundColor: "#F6DED8",
+  },
+  submitBtn: {
+    backgroundColor: "#4CAF50",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "600",
+    display: "block",
+    margin: "30px auto 0",
+    transition: "background-color 0.3s ease",
+  },
+  submitBtnHover: {
+    backgroundColor: "#4CAF50",
+  },
+  errorMessage: {
+    color: "#B82132",
+    fontSize: "14px",
+    marginTop: "5px",
+  }
+};
 
 const EntrepreneurForm = () => {
   const [formData, setFormData] = useState({
@@ -28,6 +84,7 @@ const EntrepreneurForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [uploadError, setUploadError] = useState(null); // State for upload errors
+  const [buttonHover, setButtonHover] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -185,9 +242,9 @@ const EntrepreneurForm = () => {
   };
 
   return (
-    <div className="container">
+    <div style={formStyles.container}>
       <form onSubmit={handleSubmit}>
-        <h2 className="form-title">Entrepreneur Registration</h2>
+        <h2 style={formStyles.formTitle}>Entrepreneur Registration</h2>
         <FormInput
           label="Candidate Name"
           name="candidateName"
@@ -257,9 +314,10 @@ const EntrepreneurForm = () => {
           value={formData.websiteUrl}
           onChange={handleChange}
         />
-        <div className="form-group">
-          <label htmlFor="certificate">Certificate Upload</label>
+        <div style={formStyles.formGroup}>
+          <label style={formStyles.label} htmlFor="certificate">Certificate Upload</label>
           <input
+            style={formStyles.fileInput}
             type="file"
             id="certificate"
             name="certificate"
@@ -267,9 +325,18 @@ const EntrepreneurForm = () => {
             onChange={handleFileChange}
             required
           />
-          {uploadError && <p className="error-message">{uploadError}</p>}
+          {uploadError && <p style={formStyles.errorMessage}>{uploadError}</p>}
         </div>
-        <button type="submit" className="submit-btn" disabled={loading}>
+        <button 
+          type="submit" 
+          style={{
+            ...formStyles.submitBtn,
+            ...(buttonHover ? formStyles.submitBtnHover : {})
+          }}
+          disabled={loading}
+          onMouseEnter={() => setButtonHover(true)}
+          onMouseLeave={() => setButtonHover(false)}
+        >
           {loading ? "Registering..." : "Register Entrepreneur"}
         </button>
       </form>

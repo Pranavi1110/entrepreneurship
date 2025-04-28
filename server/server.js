@@ -7,6 +7,7 @@ const app = express();
 const reportRoutes = require('./routes/reports');
 const studentRoutes = require('./routes/students');
 const uploadRoutes=require('./routes/upload')
+const entrepreneurRoutes=require('./routes/entrepreneur')
 // app.use(clerk.expressWithAuth());
 // Middlewares
 app.use(cors())
@@ -27,6 +28,7 @@ mongoose.connect(process.env.MONGODB_URL).then(() => console.log("MongoDB connec
 app.use('/api', reportRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/upload-csv',uploadRoutes);
+app.use('/api/entrepreneurs', entrepreneurRoutes);
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

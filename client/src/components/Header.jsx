@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import './Header.css'
 
 const Header = () => {
     return (
@@ -7,9 +8,9 @@ const Header = () => {
             <div className="logo">🚀 VNRVJIET Entrepreneurs</div>
             <nav>
                 <ul>
-                    <li style={{marginTop:"10px"}}><Link to="/">Home</Link></li>
-                    <li style={{marginTop:"10px"}}><Link to="/form">Registration Form</Link></li>
-                    <li style={{marginTop:"10px"}}><Link to="/students">Student Details</Link></li>
+                    <li><Link to="/" className="nav-link">Home</Link></li>
+                    <li><Link to="/form" className="nav-link">Registration Form</Link></li>
+                    <li><Link to="/students" className="nav-link">Student Details</Link></li>
                     <SignedOut>
                         <li>
                             <SignInButton className="signin-button" />

@@ -13,7 +13,13 @@ const entrepreneurSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   dinPan: { type: String },
   establishmentPeriod: { type: String },
-  websiteUrl: { type: String},
+  websiteUrl: { type: String,
+    validate: {
+      validator: function (v) {
+        return /^(https?:\/\/)?([\w\d\-]+\.)+\w{2,}(\/.*)?$/.test(v);
+      },
+      message: "Enter a valid URL!",
+    },}
 }, { timestamps: true });
 
-module.exports = mongoose.model('entrepreneur', entrepreneurSchema);
+module.exports = mongoose.model('Entrepreneur', entrepreneurSchema);

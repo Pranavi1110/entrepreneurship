@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UploadCSV from "./UploadCSV";
-import './StudentTable.css'; // Linked properly
+import './StudentTable.css';
 
 const StudentTable = () => {
   const [students, setStudents] = useState([]);
@@ -10,6 +10,8 @@ const StudentTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortOption, setSortOption] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const studentsPerPage = 10;
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -27,7 +29,7 @@ const StudentTable = () => {
   const getYearRange = (rollNo) => {
     if (!rollNo || rollNo.length < 2) return "Unknown";
     const startYearPrefix = rollNo.slice(0, 2);
-    const startYear = 2000 + parseInt(startYearPrefix, 10)+(rollNo.slice(2,5)==='071'?0:-1);
+    const startYear = 2000 + parseInt(startYearPrefix, 10) + (rollNo.slice(2, 5) === '071' ? 0 : -1);
     const endYear = startYear + 4;
     return `${startYear}-${endYear}`;
   };
@@ -50,45 +52,150 @@ const StudentTable = () => {
     filteredStudents = filteredStudents.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
   }
 
-  return (
-    <div className="student-container">
-      <h2 className="heading">Student List</h2>
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
 
-      <div className="top-bar">
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
+  };
+
+  // For hover effect, we'll use state
+  const [isSearchHovered, setIsSearchHovered] = useState(false);
+  const [isSortHovered, setIsSortHovered] = useState(false);
+  const [isUploadHovered, setIsUploadHovered] = useState(false);
+  const [hoveredSelects, setHoveredSelects] = useState({});
+
+  return (
+    <div className="student-container" style={{ padding: '20px' }}>
+      <h2 className="heading" style={{ color: '#B82132', paddingBottom: '10px' }}>Student List</h2>
+
+      <div className="top-bar" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <input
           type="text"
           className="search-bar"
           placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onMouseEnter={() => setIsSearchHovered(true)}
+          onMouseLeave={() => setIsSearchHovered(false)}
+          style={{
+            flex: '1',
+            border: '1px solid #ddd',
+            borderBottom: isSearchHovered ? '2px solid #D2665A' : '1px solid #ddd',
+            borderRadius: '4px',
+            // padding: '2px 12px',
+            width:'10px',
+            outline: 'none',
+            transition: 'border-bottom 0.2s ease'
+          }}
         />
 
-        <button className="filter-btn" onClick={() => setIsFilterOpen(true)}>Filters</button>
-
-        <select
-          className="sort-dropdown"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
+        <button 
+          className="filter-btn" 
+          onClick={() => setIsFilterOpen(true)}
+          style={{ 
+            backgroundColor: '#D2665A', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px', 
+            padding: '8px 15px',
+          }}
         >
-          <option value="">Sort By</option>
-          <option value="name">Name</option>
-          <option value="rollNo">Roll No</option>
-        </select>
+          Filters
+        </button>
 
-        <UploadCSV />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <select
+            className="sort-dropdown"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            onMouseEnter={() => setIsSortHovered(true)}
+            onMouseLeave={() => setIsSortHovered(false)}
+            style={{ 
+              appearance: 'none',
+              paddingRight: '30px',
+              backgroundColor: 'white',
+              border: '1px solid #ddd',
+              borderBottom: isSortHovered ? '2px solid #D2665A' : '1px solid #ddd',
+              borderRadius: '4px',
+              padding: '8px 12px',
+              outline: 'none',
+              transition: 'border-bottom 0.2s ease'
+            }}
+          >
+            <option value="">Sort By</option>
+            <option value="name">Name</option>
+            <option value="rollNo">Roll No</option>
+          </select>
+          <div style={{ 
+            position: 'absolute', 
+            right: '10px', 
+            pointerEvents: 'none',
+            fontSize: '12px'
+          }}>▼</div>
+        </div>
+
+        {/* Modified UploadCSV component with hover effect */}
+        <div 
+          onMouseEnter={() => setIsUploadHovered(true)}
+          onMouseLeave={() => setIsUploadHovered(false)}
+          style={{
+            position: 'relative',
+            display: 'inline-block'
+          }}
+        >
+          <UploadCSV />
+          {isUploadHovered && (
+            <div style={{
+              position: 'absolute',
+              bottom: '-2px',
+              left: '0',
+              width: '100%',
+              height: '2px',
+              backgroundColor: '#D2665A',
+              transition: 'all 0.2s ease'
+            }}></div>
+          )}
+        </div>
       </div>
 
-      {/* Sidebar for filters */}
+      {/* Sidebar */}
       {isFilterOpen && (
-        <div className="sidebar">
-          <button className="close-btn" onClick={() => setIsFilterOpen(false)}>×</button>
-          <h5>Filters</h5>
+        <div className="sidebar" style={{ 
+          borderRight: '2px solid #F2B28C', 
+          borderRadius: '0 8px 8px 0',
+          boxShadow: '0 3px 10px rgba(0,0,0,0.1)'
+        }}>
+          <button 
+            className="close-btn" 
+            onClick={() => setIsFilterOpen(false)}
+            style={{ color: '#B82132' }}
+          >×</button>
+          <h5 style={{ color: '#B82132' }}>Filters</h5>
           <div className="filter-section">
             <label>Batch</label>
             <select
               className="filter-dropdown"
               value={selectedYearRange}
               onChange={(e) => setSelectedYearRange(e.target.value)}
+              onMouseEnter={() => setHoveredSelects(prev => ({...prev, batch: true}))}
+              onMouseLeave={() => setHoveredSelects(prev => ({...prev, batch: false}))}
+              style={{ 
+                width: '100%',
+                padding: '8px',
+                marginBottom: '15px',
+                border: '1px solid #ddd',
+                borderBottom: hoveredSelects.batch ? '2px solid #D2665A' : '1px solid #ddd',
+                borderRadius: '4px',
+                outline: 'none',
+                transition: 'border-bottom 0.2s ease'
+              }}
             >
               <option value="">All Batches</option>
               {yearRanges.map((range) => (
@@ -102,6 +209,18 @@ const StudentTable = () => {
               className="filter-dropdown"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
+              onMouseEnter={() => setHoveredSelects(prev => ({...prev, role: true}))}
+              onMouseLeave={() => setHoveredSelects(prev => ({...prev, role: false}))}
+              style={{ 
+                width: '100%',
+                padding: '8px',
+                marginBottom: '15px',
+                border: '1px solid #ddd',
+                borderBottom: hoveredSelects.role ? '2px solid #D2665A' : '1px solid #ddd',
+                borderRadius: '4px',
+                outline: 'none',
+                transition: 'border-bottom 0.2s ease'
+              }}
             >
               <option value="">All Roles</option>
               {roles.map((role) => (
@@ -109,38 +228,112 @@ const StudentTable = () => {
               ))}
             </select>
           </div>
-          <button className="apply-btn" onClick={() => setIsFilterOpen(false)}>Apply Filters</button>
+          <button 
+            className="apply-btn" 
+            onClick={() => setIsFilterOpen(false)}
+            style={{ 
+              backgroundColor: '#B82132', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '4px',
+              padding: '8px',
+              width: '100%'
+            }}
+          >Apply Filters</button>
         </div>
       )}
 
       {/* Table */}
-      <div className="table-responsive">
-        <table className="student-table">
+      <div className="table-responsive" style={{ marginTop: '20px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #F6DED8' }}>
+        <table className="student-table" style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>
-            <tr>
-              <th>Sl. No</th>
-              <th>Name</th>
-              <th>Hall Ticket No</th>
-              <th>LinkedIn</th>
-              {/* <th>Role</th> */}
+            <tr style={{ borderBottom: '2px solid #F2B28C' }}>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#B82132' }}>Sl. No</th>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#B82132' }}>Name</th>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#B82132' }}>Hall Ticket No</th>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#B82132' }}>LinkedIn</th>
             </tr>
           </thead>
           <tbody>
-            {filteredStudents.map((student, idx) => (
-              <tr key={student._id}>
-                <td>{idx + 1}</td>
-                <td>{student.name}</td>
-                <td>{student.rollNo}</td>
-                <td>
-                  <a href={student.linkedinUrl} target="_blank" rel="noreferrer" className="view-btn">
-                    View
-                  </a>
+            {currentStudents.map((student, idx) => (
+              <tr key={student._id} style={{ borderBottom: '1px solid #F6DED8' }}>
+                <td style={{ padding: '10px 15px' }}>{indexOfFirstStudent + idx + 1}</td>
+                <td style={{ padding: '10px 15px' }}>{student.name}</td>
+                <td style={{ padding: '10px 15px' }}>{student.rollNo}</td>
+                <td style={{ padding: '10px 15px' }}>
+                  {student.linkedinUrl ? (
+                    <a 
+                      href={student.linkedinUrl} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="view-btn"
+                      style={{ 
+                        backgroundColor: '#D2665A',
+                        color: 'white',
+                        padding: '5px 10px',
+                        textDecoration: 'none',
+                        borderRadius: '3px',
+                        fontSize: '0.9em'
+                      }}
+                    >
+                      View
+                    </a>
+                  ) : (
+                    "-"
+                  )}
                 </td>
-                {/* <td>{student.role || "N/A"}</td> */}
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* New Pagination Style */}
+      <div className="pagination" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        marginTop: '20px',
+        gap: '10px'
+      }}>
+        <button 
+          onClick={handlePrevPage} 
+          disabled={currentPage === 1} 
+          className="page-arrow"
+          style={{ 
+            backgroundColor: currentPage === 1 ? '#f5f5f5' : '#D2665A',
+            color: currentPage === 1 ? '#999' : 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '5px 12px'
+          }}
+        >
+          &lt;
+        </button>
+
+        <span className="page-info" style={{ 
+          padding: '5px 15px', 
+          borderRadius: '4px',
+          border: '1px solid #F2B28C',
+          color: '#333'
+        }}>
+          {currentPage} / {totalPages}
+        </span>
+
+        <button 
+          onClick={handleNextPage} 
+          disabled={currentPage === totalPages} 
+          className="page-arrow"
+          style={{ 
+            backgroundColor: currentPage === totalPages ? '#f5f5f5' : '#D2665A',
+            color: currentPage === totalPages ? '#999' : 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '5px 12px'
+          }}
+        >
+          &gt;
+        </button>
       </div>
     </div>
   );
