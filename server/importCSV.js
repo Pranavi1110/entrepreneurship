@@ -129,21 +129,34 @@ function generateLinkedInUrl(name) {
 
 async function importCSV(filePath) {
   const results = [];
-
+  // let rollNoPrefix=null;
   return new Promise((resolve, reject) => {
     fs.createReadStream(filePath)
       .pipe(csv())
       .on('data', (data) => {
-        const rollNoPrefix = data.rollNo.slice(0, 2); // Get the first two digits of roll number
-        const passedOutYear = 2000 + parseInt(rollNoPrefix) + 4;
-        results.push({
-          rollNo: data.rollNo,
-          name: data.name,
-          linkedinUrl: '', // temporarily empty
-          role: '',
-          passedOutYear: passedOutYear
-        });
+        // Check if both name and rollNo exist and are not empty strings
+        if (data.name?.trim() && data.rollNo?.trim()) {
+          const rollNoPrefix = data.rollNo.slice(0, 2); // First two digits
+          const middleThreeDigits = data.rollNo.slice(2, 5);  
+          let offset = 0;
+          if (middleThreeDigits === '071') {
+            offset = 4;
+          } else if (middleThreeDigits === '075') {
+            offset = 3;
+          }
+          const passedOutYear = 2000 + parseInt(rollNoPrefix) + offset;
+          results.push({
+            rollNo: data.rollNo.trim(),
+            name: data.name.trim(),
+            linkedinUrl: '',
+            role: '',
+            passedOutYear: passedOutYear
+          });
+        } else {
+          console.warn('Skipping empty or invalid row:', data);
+        }
       })
+      
       .on('end', async () => {
         try {
           console.log(results);
@@ -151,16 +164,19 @@ async function importCSV(filePath) {
           console.log("Students inserted!");
 
           // In your main code where you're updating students
-for (const student of insertedStudents) {
-  const linkedinUrl = generateLinkedInUrl(student.name);
-  // Now using the new Derrick API function
-  const role = await fetchRoleFromDerrick(student.name, student.rollNo);
-
-  await Student.findByIdAndUpdate(student._id, {
-    linkedinUrl: linkedinUrl,
-    role: role
-  });
-}
+          await Promise.all(insertedStudents.map(async (student) => {
+            try {
+              const linkedinUrl = generateLinkedInUrl(student.name);
+              const role = await fetchRoleFromDerrick(student.name, student.rollNo);
+          
+              await Student.findByIdAndUpdate(student._id, {
+                linkedinUrl: linkedinUrl,
+                role: role
+              });
+            } catch (error) {
+              console.error(`Failed to update student ${student.name}:`, error);
+            }
+          }));
 
           console.log("LinkedIn URLs updated successfully");
           resolve();

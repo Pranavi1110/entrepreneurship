@@ -27,7 +27,7 @@ const StudentTable = () => {
   const getYearRange = (rollNo) => {
     if (!rollNo || rollNo.length < 2) return "Unknown";
     const startYearPrefix = rollNo.slice(0, 2);
-    const startYear = 2000 + parseInt(startYearPrefix, 10);
+    const startYear = 2000 + parseInt(startYearPrefix, 10)+(rollNo.slice(2,5)==='071'?0:-1);
     const endYear = startYear + 4;
     return `${startYear}-${endYear}`;
   };
@@ -122,7 +122,7 @@ const StudentTable = () => {
               <th>Name</th>
               <th>Hall Ticket No</th>
               <th>LinkedIn</th>
-              <th>Role</th>
+              {/* <th>Role</th> */}
             </tr>
           </thead>
           <tbody>
@@ -136,7 +136,7 @@ const StudentTable = () => {
                     View
                   </a>
                 </td>
-                <td>{student.role || "N/A"}</td>
+                {/* <td>{student.role || "N/A"}</td> */}
               </tr>
             ))}
           </tbody>

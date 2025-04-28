@@ -16,10 +16,10 @@ const studentSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  role: {
-    type: String,
-    trim: true
-  },
+  // role: {
+  //   type: String,
+  //   trim: true
+  // },
   passedOutYear: {
     type: Number
   }
